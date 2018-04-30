@@ -1,4 +1,6 @@
-
+/**
+ * empty basic vertex shader
+ */
 
 attribute vec3 a_position;
 
@@ -13,9 +15,6 @@ uniform mat4 u_projection;
 
 //like a C program main is the main function
 void main() {
-  gl_Position = u_projection * u_modelView
-      * vec4(a_position , 1);
-
-    //just copy the input color to the output varying color
-    v_color = a_color;
+  gl_Position = u_projection * u_modelView * vec4(a_position,1) ;
+  v_color = a_color;
 }
