@@ -14,10 +14,10 @@ var robotTransformationNode;
 var firstScene;
 var playGroundTransformationNode
 
-//-------- Kamera Variables----------
+//-------- Kamera Variables---------- -1.3012319999999966  y  = -0.30013200000000345   z = 2.0815672000000016
 var cameraFree = true;
-var cameraTranslationX = 1.5,cameraTranslationY = 0,cameraTranslationZ = -0.5 ,cameraTranslationSpeed = 1.2;
-var cameraRotationAngle = 0 , cameraRotationAngleSpeed = 20;
+var cameraTranslationX = -1.3,cameraTranslationY = -0.3,cameraTranslationZ = 2.08 ,cameraTranslationSpeed = 1.2;
+var cameraRotationAngle = -80 , cameraRotationAngleSpeed = 20;
 //-----------------------------------
 
 //----------Time Variable------------
@@ -58,7 +58,7 @@ function init(resources) {
 
     //-------- wall and Glass --------
 
-    initWallAndWindow(firstScene);
+    initWallAndWindow(firstScene,resources);
     //----------------------------------
 
 
@@ -73,26 +73,34 @@ function initInteraction(canvas) {
 
 function handleKeyUp(event) {
     isKeyPressing = false;
-    console.log('key upped ');
 }
 
 function handleKeyDown(event) {
     isKeyPressing = true;
     key = event.keyCode || event.which || event.charCode;
-
-    console.log('key pressed = ' + key);
-    console.log('rotation angle ' + cameraRotationAngle);
 }
 
-function initWallAndWindow(scene) {
+function initWallAndWindow(scene,resources) {
 
-    var wallTransformationMatrix = mat4.multiply(mat4.create(),mat4.create(), glm.rotateY(0));
-    wallTransformationMatrix = mat4.multiply(mat4.create(),wallTransformationMatrix,glm.translate(-1,0,-0.5));
-    wallTransformationMatrix = mat4.multiply(mat4.create(),wallTransformationMatrix,glm.scale(0.05,0.3,1));
+    var wallTransformationMatrix = mat4.multiply(mat4.create(),mat4.create(), glm.rotateY(90));
+    wallTransformationMatrix = mat4.multiply(mat4.create(),wallTransformationMatrix,glm.translate(2.535,0.15,-0.75));
+    wallTransformationMatrix = mat4.multiply(mat4.create(),wallTransformationMatrix,glm.scale(0.035,0.15,2.25));
     var wallTransformationNode= new TransformationSceneGraphNode(wallTransformationMatrix);
     scene.append(wallTransformationNode);
     var wall = new CubeRenderNode();
     wallTransformationNode.append(wall);
+
+    var windowTransformationMatrix = mat4.multiply(mat4.create(),mat4.create(),glm.rotateY(-90));
+    windowTransformationMatrix = mat4.multiply(mat4.create(),windowTransformationMatrix ,glm.translate(0,1.75,0));
+    windowTransformationMatrix = mat4.multiply(mat4.create(),windowTransformationMatrix,glm.scale(1,0.75,1));
+    var windowTransformationNode = new TransformationSceneGraphNode(windowTransformationMatrix);
+    wallTransformationNode.append(windowTransformationNode);
+    var windowTransformationShader = new ShaderSceneGraphNode(createProgram(gl,resources.windowvs,resources.windowfs));
+    windowTransformationNode.append(windowTransformationShader);
+    var window = new QuadRenderNode();
+    windowTransformationShader.append(window);
+
+
 }
 
 function initSeats(scene) {
@@ -183,7 +191,9 @@ function render(timeInMilliseconds) {
 //load the shader resources using a utility function
 loadResources({
     vs: 'shader/crazy_player.vs.glsl',
-    fs: 'shader/crazy_player.fs.glsl'
+    fs: 'shader/crazy_player.fs.glsl',
+    windowvs:'shader/window_shadervs.vs.glsl',
+    windowfs: 'shader/window_shaderfs.fs.glsl'
 }).then(function (resources /*an object containing our keys with the loaded resources*/) {
     init(resources);
 
@@ -255,6 +265,10 @@ function calculateViewFreeMatrix(){
             cameraTranslationZ = cameraTranslationZ - (deltaTime * cameraTranslationSpeed);
         }
     }
+
+    //console.log('x = ' + cameraTranslationX + '  y  = ' + cameraTranslationY + '   z = ' + cameraTranslationZ );
+    //console.log('camera angle = ' + cameraRotationAngle);
+
 
     viewMatrix = mat4.multiply(mat4.create(),viewMatrix,glm.rotateY(cameraRotationAngle));
     viewMatrix = mat4.multiply(mat4.create() , viewMatrix , glm.translate(cameraTranslationX,cameraTranslationY,cameraTranslationZ));
