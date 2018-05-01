@@ -13,5 +13,5 @@ uniform float u_alpha;
 
 //entry point again
 void main() {
-  gl_FragColor = vec4(v_color,0.3);
+  gl_FragColor = vec4(v_color,0.1);
 }

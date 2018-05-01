@@ -9,15 +9,34 @@ var aspectRatio = canvasWidth / canvasHeight;
 var context;
 
 //------------player Variables--------------
-var playerTransformationNode;
+var playerTransformationNode,playerTransformationRightArmNode, playerTransformationLeftArmNode,
+    playerTransformationRightLegNode, playerTransformationLeftLegNode,
+    playerTransformationHeadNode;
+var playerTranslationX = 0,playerTranslationY = 0.3,playerTranslationZ = -0.5;
+var playerScaleX = 0.05, playerScaleY = 0.05, playerScaleZ = 0.02;
+var playerScaleArmX = playerScaleX/4,playerScaleArmY= (playerScaleY * 3) /4,playerScaleArmZ = playerScaleZ/2,
+    playerScaleLegX = playerScaleArmX ,playerScaleLegY = playerScaleArmY,playerScaleLegZ = playerScaleArmZ;
+
+var playerTranslationRightArmX = -0.065,playerTranslationRightArmY = 0,playerTranslationRightArmZ = 0,
+    playerTranslationLeftArmX = 0.065,playerTranslationLeftArmY = 0,playerTranslationLeftArmZ = 0;
+var playerTranslationRightLegX = -0.03,playerTranslationRightLegY = -0.09,playerTranslationRightLegZ=0,
+    playerTranslationLeftLegX = 0.03,playerTranslationLeftLegY = -0.09,playerTranslationLeftLegZ = 0;
+var playerRotationRightArmAngle,playerRotationLefttArmAngle,
+    playerRotationRightLegAngle,playerRotationLeftLegAngle,
+    playerRotationHeadAngle;
+var playerRotationAngleSpeed = 2;
+
+var playerScaleHeadX = playerScaleX /3 ,playerScaleHeadY = playerScaleY/3 ,playerScaleHeadZ = playerScaleZ;
+var playerTranslationHeadX,playerTranslationHeadY,playerTranslationHeadZ;
+
 //------------------------------------------
 
 //---------------------scenes---------------
 var firstScene , secondScene;
-var sceneCounter = 0;
+var firstSceneEnd = false;
 //------------------------------------------
 
-//---------- Playe Ground Variables --------
+//---------- Playground Variables --------
 var playGroundTransformationNode;
 
 
@@ -25,15 +44,15 @@ var playGroundTransformationNode;
 
 //---------- Platform in Room Variables ----
 var platformTranformationNode;
-var platformRotationAngle = 1,platformRotationAngleSpeed = 10;
+var platformRotationAngle = 1,platformRotationAngleSpeed = 30;
 var platformTranslationX =0,platformTranslationY = 0,platformTranslationZ = -0.1;
 var platformScaleX = 0.4, platformScaleY=0.4, platformScaleZ=0.1;
 //------------------------------------------
 
 //-------- Kamera Variables-----------------
-var cameraFree = true;
-var cameraTranslationX = 0,cameraTranslationY = 0,cameraTranslationZ = 0 ,cameraTranslationSpeed = 1.2;
-var cameraRotationAngle = 0 , cameraRotationAngleSpeed = 20;
+var cameraFree = false;
+var cameraTranslationX = 0,cameraTranslationY = -1.85,cameraTranslationZ = -2.97 ,cameraTranslationSpeed = 1.2;
+var cameraRotationAngle = -90, cameraRotationAngleSpeed = 40;
 //------------------------------------------
 
 //----------Time Variable------------
@@ -60,7 +79,7 @@ function init(resources) {
     //--------- Room ----------------
     initRoom(firstScene,resources);
     initGroundPlatform(firstScene,resources);
-    initPlayer(firstScene);
+    initPlayerOnThePlatform(firstScene);
 
 
     secondScene = new SceneGraphNode();
@@ -68,7 +87,7 @@ function init(resources) {
     //--------- spiel platz----------
     initPlayGround(secondScene);
     //---------  player   -----------
-    initPlayer(secondScene);
+
     //---------- Seats    -------------
     initSeats(secondScene);
     //-------- wall and Glass --------
@@ -95,6 +114,71 @@ function handleKeyDown(event) {
 }
 
 
+function initPlayerOnThePlatform(scene) {
+
+    var playerTransformationMatrix = mat4.create();
+    playerTransformationMatrix = mat4.multiply(mat4.create(),playerTransformationMatrix,glm.translate(playerTranslationX,playerTranslationY-0.015,playerTranslationZ));
+    playerTransformationMatrix = mat4.multiply(mat4.create(),playerTransformationMatrix,glm.rotateY(platformRotationAngle));
+    //playerTransformationMatrix = mat4.multiply(mat4.create(),playerTransformationMatrix,glm.scale(playerScaleX,playerScaleY,playerScaleZ));
+    playerTransformationNode = new TransformationSceneGraphNode(playerTransformationMatrix);
+    scene.append(playerTransformationNode);
+
+    var playerTransformationBodyMatrix = mat4.create();
+    playerTransformationBodyMatrix = mat4.multiply(mat4.create(),playerTransformationBodyMatrix,glm.scale(playerScaleX,playerScaleY,playerScaleZ));
+    var playerTransformationBodyNode = new TransformationSceneGraphNode(playerTransformationBodyMatrix);
+
+    playerTransformationNode.append(playerTransformationBodyNode);
+
+    var body = new CubeRenderNode();
+    playerTransformationBodyNode.append(body);
+
+    var playerTransformationLeftArmMatrix = mat4.create();
+    /* !!Arm Bewegung
+    playerTransformationLeftArmMatrix = mat4.multiply(mat4.create(),playerTransformationLeftArmMatrix,glm.translate(0,0.04,0));
+    playerTransformationLeftArmMatrix = mat4.multiply(mat4.create(),playerTransformationLeftArmMatrix,glm.rotateX(-90));
+    playerTransformationLeftArmMatrix = mat4.multiply(mat4.create(),playerTransformationLeftArmMatrix,glm.translate(0,-0.04,0));
+    */
+    playerTransformationLeftArmMatrix = mat4.multiply(mat4.create(),playerTransformationLeftArmMatrix,glm.translate(playerTranslationLeftArmX,playerTranslationLeftArmY,playerTranslationLeftArmZ));
+    playerTransformationLeftArmMatrix = mat4.multiply(mat4.create(),playerTransformationLeftArmMatrix,glm.scale(playerScaleArmX,playerScaleArmY,playerScaleArmZ));
+    playerTransformationLeftArmNode = new TransformationSceneGraphNode(playerTransformationLeftArmMatrix);
+    playerTransformationNode.append(playerTransformationLeftArmNode);
+    var leftArm = new CubeRenderNode();
+    playerTransformationLeftArmNode.append(leftArm);
+
+    var playerTransformationRightArmMatrix = mat4.create();
+    playerTransformationRightArmMatrix = mat4.multiply(mat4.create(),playerTransformationRightArmMatrix,glm.translate(playerTranslationRightArmX,playerTranslationRightArmY,playerTranslationRightArmZ));
+    playerTransformationRightArmMatrix = mat4.multiply(mat4.create(),playerTransformationRightArmMatrix,glm.scale(playerScaleArmX,playerScaleArmY,playerScaleArmZ));
+    playerTransformationRightArmNode = new TransformationSceneGraphNode(playerTransformationRightArmMatrix);
+    playerTransformationNode.append(playerTransformationRightArmNode);
+    var rightArm = new CubeRenderNode();
+    playerTransformationRightArmNode.append(rightArm);
+
+    var playerTransformationRightLegMatrix = mat4.create();
+    playerTransformationRightLegMatrix = mat4.multiply(mat4.create(),playerTransformationRightLegMatrix,glm.translate(playerTranslationRightLegX,playerTranslationRightLegY,playerTranslationRightLegZ));
+    playerTransformationRightLegMatrix = mat4.multiply(mat4.create(),playerTransformationRightLegMatrix,glm.scale(playerScaleLegX,playerScaleLegY,playerScaleLegZ));
+    playerTransformationRightLegNode = new TransformationSceneGraphNode(playerTransformationRightLegMatrix);
+    playerTransformationNode.append(playerTransformationRightLegNode);
+    var rightLeg = new CubeRenderNode();
+    playerTransformationRightLegNode.append(rightLeg);
+
+    var playerTransformationLeftLegMatrix = mat4.create();
+    playerTransformationLeftLegMatrix = mat4.multiply(mat4.create(),playerTransformationLeftLegMatrix,glm.translate(playerTranslationLeftLegX,playerTranslationLeftLegY,playerTranslationLeftLegZ));
+    playerTransformationLeftLegMatrix = mat4.multiply(mat4.create(),playerTransformationLeftLegMatrix,glm.scale(playerScaleLegX,playerScaleLegY,playerScaleLegZ));
+    playerTransformationLeftLegNode = new TransformationSceneGraphNode(playerTransformationLeftLegMatrix);
+    playerTransformationNode.append(playerTransformationLeftLegNode);
+    var leftLeg = new CubeRenderNode();
+    playerTransformationLeftLegNode.append(leftLeg);
+
+    var playerTransformationHeadMatrix = mat4.create();
+    playerTransformationHeadMatrix = mat4.multiply(mat4.create(),playerTransformationHeadMatrix,glm.translate(0,0.0675,0));
+    playerTransformationHeadMatrix = mat4.multiply(mat4.create(),playerTransformationHeadMatrix,glm.scale(playerScaleHeadX,playerScaleHeadY,playerScaleHeadZ));
+    playerTransformationHeadNode = new TransformationSceneGraphNode(playerTransformationHeadMatrix);
+    playerTransformationNode.append(playerTransformationHeadNode);
+    var head = new CubeRenderNode();
+    playerTransformationHeadNode.append(head);
+
+
+}
 
 function initGroundPlatform(scene,resources) {
     var groundTransformationMatrix = mat4.multiply(mat4.create(),mat4.create(),glm.rotateX(90));
@@ -115,8 +199,6 @@ function initGroundPlatform(scene,resources) {
     platformTranformationNode.append(platformShader);
     var platform = new CubeRenderNode();
     platformShader.append(platform);
-
-
 
 }
 
@@ -144,6 +226,34 @@ function initRoom(scene,resources) {
     roomTransformationShader.append(wall2TransformationNode);
     var wall2 = new CubeRenderNode();
     wall2TransformationNode.append(wall2);
+
+    var wall3TransformationMatrix = mat4.create();
+    wall3TransformationMatrix = mat4.multiply(mat4.create(),wall3TransformationMatrix,glm.rotateY(-90));
+    wall3TransformationMatrix = mat4.multiply(mat4.create(),wall3TransformationMatrix,glm.translate(0,0.15,-0.75));
+    wall3TransformationMatrix = mat4.multiply(mat4.create(),wall3TransformationMatrix,glm.scale(0.75,0.15,0.05));
+    var wall3TransformationNode = new TransformationSceneGraphNode(wall3TransformationMatrix);
+    roomTransformationShader.append(wall3TransformationNode);
+    var wall3 = new CubeRenderNode();
+    wall3TransformationNode.append(wall3);
+
+    var wall4TransformationMatrix = mat4.create();
+    wall4TransformationMatrix = mat4.multiply(mat4.create(),wall4TransformationMatrix,glm.rotateY(180));
+    wall4TransformationMatrix = mat4.multiply(mat4.create(),wall4TransformationMatrix,glm.translate(-0.25,0.3,-0.75));
+    wall4TransformationMatrix = mat4.multiply(mat4.create(),wall4TransformationMatrix,glm.scale(0.5,0.3,0.05));
+    var wall4TransformationNode = new TransformationSceneGraphNode(wall4TransformationMatrix);
+    roomTransformationShader.append(wall4TransformationNode);
+    var wall4 = new CubeRenderNode();
+    wall4TransformationNode.append(wall4);
+
+    var windowTransformationMatrix = mat4.create();
+    windowTransformationMatrix = mat4.multiply(mat4.create(),windowTransformationMatrix,glm.rotateY(-90));
+    windowTransformationMatrix = mat4.multiply(mat4.create(),windowTransformationMatrix,glm.translate(0,0.45,-0.75));
+    windowTransformationMatrix = mat4.multiply(mat4.create(),windowTransformationMatrix,glm.scale(0.75,0.15,0.05));
+    var windowTranslationNode = new TransformationSceneGraphNode(windowTransformationMatrix);
+    roomTransformationNode.append(windowTranslationNode);
+    var windowShader = new ShaderSceneGraphNode(createProgram(gl,resources.windowvs,resources.windowfs));
+    windowTranslationNode.append(windowShader);
+    windowShader.append(new QuadRenderNode());
 
 
 }
@@ -212,28 +322,14 @@ function initPlayGround(scene) {
 }
 
 
-function initPlayer(scene) {
-    var playerTransformationMatrix = mat4.multiply(mat4.create(), mat4.create(), glm.rotateY(0));
-    playerTransformationMatrix = mat4.multiply(mat4.create(),playerTransformationMatrix,glm.translate(0,0.3,-0.5));
-    playerTransformationMatrix = mat4.multiply(mat4.create(), playerTransformationMatrix, glm.rotateY(0));
-    playerTransformationMatrix = mat4.multiply(mat4.create(),playerTransformationMatrix,glm.scale(0.05,0.05,0.02));
-    playerTransformationNode = new TransformationSceneGraphNode(playerTransformationMatrix);
-    scene.append(playerTransformationNode);
-
-
-    var body = new CubeRenderNode();
-    playerTransformationNode.append(body);
-
-}
-
-
 function render(timeInMilliseconds) {
 
     time = timeInMilliseconds / 1000;
     deltaTime = time - lastTime;
 
-    if(!isNaN(deltaTime))
+    if(!isNaN(deltaTime)) {
         platformRotationAngle = platformRotationAngle + (deltaTime * platformRotationAngleSpeed);
+    }
 
     //set background color to light gray
     gl.clearColor(0.9, 0.9, 0.9, 1.0);
@@ -251,29 +347,48 @@ function render(timeInMilliseconds) {
     gl.useProgram(shaderProgram);
 
 
+
+
     context = createSceneGraphContext(gl,shaderProgram);
 
-    //if(time <10)
-    //secondScene.render(context);
+    if(time<7.2 && !isNaN(time)){
+        updatePlatform();
+        updatePlayerOnThePlatform();
+        firstScene.render(context);
+    }
+    else{
+        if(!firstSceneEnd && time>=7.2){ //x = -2.5439868000000083  y  = 0.7419999999999853   z = 2.5740000000000056
+            //camera angle = -34.00000000000061
+            cameraTranslationX = -2.54;
+            cameraTranslationY = 0.74;
+            cameraTranslationZ = 2.57;
+            cameraRotationAngle = -34;
+            firstSceneEnd = true;
+        }
+    }
 
-    firstScene.render(context);
+    if(time>=7.2){
+        secondScene.render(context);
+    }
 
-    //console.log(platformRotationAngle);
 
-    updatePlatform();
-
-    var playerTransformationMatrix = mat4.multiply(mat4.create(), mat4.create(), glm.rotateY(0));
-    playerTransformationMatrix = mat4.multiply(mat4.create(),playerTransformationMatrix,glm.translate(0,0.3,-0.5));
-    playerTransformationMatrix = mat4.multiply(mat4.create(), playerTransformationMatrix, glm.rotateY(0));
-    playerTransformationMatrix = mat4.multiply(mat4.create(),playerTransformationMatrix,glm.scale(0.05,0.05,0.02));
-    playerTransformationNode.setMatrix(playerTransformationMatrix);
 
 
     requestAnimationFrame(render);
+
     lastTime = time;
 
 }
 
+
+function updatePlayerOnThePlatform() {
+
+    var playerTransformationMatrix = mat4.create();
+    playerTransformationMatrix = mat4.multiply(mat4.create(),playerTransformationMatrix,glm.translate(playerTranslationX,playerTranslationY,playerTranslationZ));
+    playerTransformationMatrix = mat4.multiply(mat4.create(),playerTransformationMatrix,glm.rotateY(-platformRotationAngle));
+
+    playerTransformationNode.setMatrix(playerTransformationMatrix);
+}
 
 function updatePlatform(){
     var platformTransformationMatrix = mat4.create();
@@ -318,10 +433,21 @@ function createSceneGraphContext(gl, shader) {
     //set projection matrix
     gl.uniformMatrix4fv(gl.getUniformLocation(shader, 'u_projection'), false, projectionMatrix);
 
+    var view;
+
+    if(!firstSceneEnd && !cameraFree){
+        view = calculateViewFirstSceneAnimationMatrix();
+    }
+    else if(firstSceneEnd && !cameraFree){
+        view = calculateViewSecondSceneAnimationMatrix();
+    }
+    else
+        view = calculateViewFreeMatrix();
+
     return {
         gl: gl,
         sceneMatrix: mat4.create(),
-        viewMatrix: !cameraFree ? calculateViewMatrix() : calculateViewFreeMatrix(),
+        viewMatrix: view,
         projectionMatrix: projectionMatrix,
         shader: shader
     };
@@ -329,6 +455,8 @@ function createSceneGraphContext(gl, shader) {
 }
 
 function calculateViewFreeMatrix(){
+    console.log('freeeeee');
+
     //compute the camera's matrix
     var eye = [0,3,5];
     var center = [0,0,0];
@@ -365,12 +493,11 @@ function calculateViewFreeMatrix(){
         }
     }
 
-    //console.log('x = ' + cameraTranslationX + '  y  = ' + cameraTranslationY + '   z = ' + cameraTranslationZ );
-    //console.log('camera angle = ' + cameraRotationAngle);
+    console.log('x = ' + cameraTranslationX + '  y  = ' + cameraTranslationY + '   z = ' + cameraTranslationZ );
+    console.log('camera angle = ' + cameraRotationAngle);
 
-
-    viewMatrix = mat4.multiply(mat4.create(),viewMatrix,glm.rotateY(cameraRotationAngle));
     viewMatrix = mat4.multiply(mat4.create() , viewMatrix , glm.translate(cameraTranslationX,cameraTranslationY,cameraTranslationZ));
+    viewMatrix = mat4.multiply(mat4.create(),viewMatrix,glm.rotateY(cameraRotationAngle));
 
     return viewMatrix;
 }
@@ -385,11 +512,55 @@ function calculateViewMatrix() {
     return viewMatrix;
 }
 
-function calculateViewAnimationMatrix() {
+function calculateViewSecondSceneAnimationMatrix() {
+    console.log('we are second sceneeee .......');
+    //compute the camera's matrix
     var eye = [0,3,5];
     var center = [0,0,0];
     var up = [0,1,0];
     viewMatrix = mat4.lookAt(mat4.create(), eye, center, up);
+
+    viewMatrix = mat4.multiply(mat4.create() , viewMatrix , glm.translate(cameraTranslationX,cameraTranslationY,cameraTranslationZ));
+    viewMatrix = mat4.multiply(mat4.create(),viewMatrix,glm.rotateY(cameraRotationAngle));
+    return viewMatrix;
+}
+
+
+function calculateViewFirstSceneAnimationMatrix() {
+    console.log(' firstScene');
+    var eye = [0,3,5];
+    var center = [0,0,0];
+    var up = [0,1,0];
+    viewMatrix = mat4.lookAt(mat4.create(), eye, center, up);
+
+
+    viewMatrix = mat4.multiply(mat4.create() , viewMatrix , glm.translate(cameraTranslationX,cameraTranslationY,cameraTranslationZ));
+    viewMatrix = mat4.multiply(mat4.create(),viewMatrix,glm.rotateY(cameraRotationAngle));
+
+    if(!isNaN(time) && !isNaN(deltaTime)){
+
+        if(time<3.3){
+            if(cameraTranslationY < -0.65)
+                cameraTranslationY = cameraTranslationY +(deltaTime * cameraTranslationSpeed);
+            if(cameraTranslationZ< -0.954)
+                cameraTranslationZ = cameraTranslationZ +(deltaTime * cameraTranslationSpeed);
+            if(cameraRotationAngle < 23.2){
+                cameraRotationAngle = cameraRotationAngle + (deltaTime * cameraRotationAngleSpeed);
+            }
+        }
+        else if (time < 7.1){
+            if(cameraTranslationX < 0.32)
+                cameraTranslationX = cameraTranslationX +(deltaTime * cameraTranslationSpeed);
+            if(cameraTranslationY < 1.95)
+                cameraTranslationY = cameraTranslationY +(deltaTime * cameraTranslationSpeed);
+            if(cameraTranslationZ< 4.07)
+                cameraTranslationZ = cameraTranslationZ +(deltaTime * cameraTranslationSpeed);
+            if(cameraRotationAngle < 23.7){
+                cameraRotationAngle = cameraRotationAngle + (deltaTime * cameraRotationAngleSpeed);
+            }
+        }
+    }
+
     return viewMatrix;
 }
 
