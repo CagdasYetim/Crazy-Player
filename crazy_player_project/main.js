@@ -8,17 +8,33 @@ var aspectRatio = canvasWidth / canvasHeight;
 
 var context;
 
+//------------player Variables--------------
+var playerTransformationNode;
+//------------------------------------------
 
-var robotTransformationNode;
+//---------------------scenes---------------
+var firstScene , secondScene;
+var sceneCounter = 0;
+//------------------------------------------
 
-var firstScene;
-var playGroundTransformationNode
+//---------- Playe Ground Variables --------
+var playGroundTransformationNode;
 
-//-------- Kamera Variables---------- -1.3012319999999966  y  = -0.30013200000000345   z = 2.0815672000000016
+
+//------------------------------------------
+
+//---------- Platform in Room Variables ----
+var platformTranformationNode;
+var platformRotationAngle = 1,platformRotationAngleSpeed = 10;
+var platformTranslationX =0,platformTranslationY = 0,platformTranslationZ = -0.1;
+var platformScaleX = 0.4, platformScaleY=0.4, platformScaleZ=0.1;
+//------------------------------------------
+
+//-------- Kamera Variables-----------------
 var cameraFree = true;
-var cameraTranslationX = -1.3,cameraTranslationY = -0.3,cameraTranslationZ = 2.08 ,cameraTranslationSpeed = 1.2;
-var cameraRotationAngle = -80 , cameraRotationAngleSpeed = 20;
-//-----------------------------------
+var cameraTranslationX = 0,cameraTranslationY = 0,cameraTranslationZ = 0 ,cameraTranslationSpeed = 1.2;
+var cameraRotationAngle = 0 , cameraRotationAngleSpeed = 20;
+//------------------------------------------
 
 //----------Time Variable------------
 var time = 0 , lastTime = 0 , deltaTime = 0;
@@ -41,24 +57,22 @@ function init(resources) {
 
     firstScene = new SceneGraphNode();
 
-
-    //--------- spiel platz----------
-
-    initPlayGround(firstScene);
-
-    //---------  player   -----------
-
+    //--------- Room ----------------
+    initRoom(firstScene,resources);
+    initGroundPlatform(firstScene,resources);
     initPlayer(firstScene);
 
+
+    secondScene = new SceneGraphNode();
+
+    //--------- spiel platz----------
+    initPlayGround(secondScene);
+    //---------  player   -----------
+    initPlayer(secondScene);
     //---------- Seats    -------------
-
-    initSeats(firstScene);
-
-    //--------------------------------
-
+    initSeats(secondScene);
     //-------- wall and Glass --------
-
-    initWallAndWindow(firstScene,resources);
+    initWallAndWindow(secondScene,resources);
     //----------------------------------
 
 
@@ -78,6 +92,60 @@ function handleKeyUp(event) {
 function handleKeyDown(event) {
     isKeyPressing = true;
     key = event.keyCode || event.which || event.charCode;
+}
+
+
+
+function initGroundPlatform(scene,resources) {
+    var groundTransformationMatrix = mat4.multiply(mat4.create(),mat4.create(),glm.rotateX(90));
+    groundTransformationMatrix = mat4.multiply(mat4.create(),groundTransformationMatrix,glm.translate(0,-0.5,0));
+    groundTransformationMatrix = mat4.multiply(mat4.create(),groundTransformationMatrix,glm.scale(0.75,0.75,0.75));
+    var groundTransformationNode = new TransformationSceneGraphNode(groundTransformationMatrix);
+    scene.append(groundTransformationNode);
+    var ground = new QuadRenderNode();
+    groundTransformationNode.append(ground);
+
+    var platformTransformationMatrix = mat4.create();
+    platformTransformationMatrix = mat4.multiply(mat4.create(),platformTransformationMatrix,glm.rotateZ(platformRotationAngle));
+    platformTransformationMatrix = mat4.multiply(mat4.create(),platformTransformationMatrix,glm.translate(platformTranslationX,platformTranslationY,platformTranslationZ));
+    platformTransformationMatrix = mat4.multiply(mat4.create(),platformTransformationMatrix,glm.scale(platformScaleX,platformScaleY,platformScaleZ));
+    platformTranformationNode = new TransformationSceneGraphNode(platformTransformationMatrix);
+    groundTransformationNode.append(platformTranformationNode);
+    var platformShader = new ShaderSceneGraphNode(createProgram(gl,resources.platformvs,resources.platformfs));
+    platformTranformationNode.append(platformShader);
+    var platform = new CubeRenderNode();
+    platformShader.append(platform);
+
+
+
+}
+
+function initRoom(scene,resources) {
+    var roomTransformationMatrix = mat4.multiply(mat4.create(),mat4.create(),glm.translate(0,0,-0.5));
+    var roomTransformationNode = new TransformationSceneGraphNode(roomTransformationMatrix);
+    scene.append(roomTransformationNode);
+
+    var roomTransformationShader = new ShaderSceneGraphNode(createProgram(gl,resources.wallBrownvs,resources.wallBrownfs));
+    roomTransformationNode.append(roomTransformationShader);
+
+    var wall1TransformationMatrix = mat4.create();
+    wall1TransformationMatrix = mat4.multiply(mat4.create(),wall1TransformationMatrix,glm.translate(0,0.3,-0.75))
+    wall1TransformationMatrix = mat4.multiply(mat4.create(),wall1TransformationMatrix,glm.scale(0.75,0.3,0.05));
+    var wall1TransformationNode = new TransformationSceneGraphNode(wall1TransformationMatrix);
+    roomTransformationShader.append(wall1TransformationNode);
+    var wall1 = new CubeRenderNode();
+    wall1TransformationNode.append(wall1);
+
+    var wall2TransformationMatrix = mat4.create();
+    wall2TransformationMatrix = mat4.multiply(mat4.create(),wall2TransformationMatrix,glm.rotateY(90));
+    wall2TransformationMatrix = mat4.multiply(mat4.create(),wall2TransformationMatrix,glm.translate(0,0.3,-0.75));
+    wall2TransformationMatrix = mat4.multiply(mat4.create(),wall2TransformationMatrix,glm.scale(0.75,0.3,0.05));
+    var wall2TransformationNode = new TransformationSceneGraphNode(wall2TransformationMatrix);
+    roomTransformationShader.append(wall2TransformationNode);
+    var wall2 = new CubeRenderNode();
+    wall2TransformationNode.append(wall2);
+
+
 }
 
 function initWallAndWindow(scene,resources) {
@@ -145,15 +213,16 @@ function initPlayGround(scene) {
 
 
 function initPlayer(scene) {
-    var robotTransformationMatrix = mat4.multiply(mat4.create(), mat4.create(), glm.rotateY(0));
-    robotTransformationMatrix = mat4.multiply(mat4.create(),robotTransformationMatrix,glm.translate(0,0.1,0));
-    robotTransformationMatrix = mat4.multiply(mat4.create(),robotTransformationMatrix,glm.scale(0.05,0.05,0.02));
-    robotTransformationNode = new TransformationSceneGraphNode(robotTransformationMatrix);
-    scene.append(robotTransformationNode);
+    var playerTransformationMatrix = mat4.multiply(mat4.create(), mat4.create(), glm.rotateY(0));
+    playerTransformationMatrix = mat4.multiply(mat4.create(),playerTransformationMatrix,glm.translate(0,0.3,-0.5));
+    playerTransformationMatrix = mat4.multiply(mat4.create(), playerTransformationMatrix, glm.rotateY(0));
+    playerTransformationMatrix = mat4.multiply(mat4.create(),playerTransformationMatrix,glm.scale(0.05,0.05,0.02));
+    playerTransformationNode = new TransformationSceneGraphNode(playerTransformationMatrix);
+    scene.append(playerTransformationNode);
 
 
     var body = new CubeRenderNode();
-    robotTransformationNode.append(body);
+    playerTransformationNode.append(body);
 
 }
 
@@ -162,6 +231,9 @@ function render(timeInMilliseconds) {
 
     time = timeInMilliseconds / 1000;
     deltaTime = time - lastTime;
+
+    if(!isNaN(deltaTime))
+        platformRotationAngle = platformRotationAngle + (deltaTime * platformRotationAngleSpeed);
 
     //set background color to light gray
     gl.clearColor(0.9, 0.9, 0.9, 1.0);
@@ -180,7 +252,21 @@ function render(timeInMilliseconds) {
 
 
     context = createSceneGraphContext(gl,shaderProgram);
+
+    //if(time <10)
+    //secondScene.render(context);
+
     firstScene.render(context);
+
+    //console.log(platformRotationAngle);
+
+    updatePlatform();
+
+    var playerTransformationMatrix = mat4.multiply(mat4.create(), mat4.create(), glm.rotateY(0));
+    playerTransformationMatrix = mat4.multiply(mat4.create(),playerTransformationMatrix,glm.translate(0,0.3,-0.5));
+    playerTransformationMatrix = mat4.multiply(mat4.create(), playerTransformationMatrix, glm.rotateY(0));
+    playerTransformationMatrix = mat4.multiply(mat4.create(),playerTransformationMatrix,glm.scale(0.05,0.05,0.02));
+    playerTransformationNode.setMatrix(playerTransformationMatrix);
 
 
     requestAnimationFrame(render);
@@ -188,12 +274,25 @@ function render(timeInMilliseconds) {
 
 }
 
+
+function updatePlatform(){
+    var platformTransformationMatrix = mat4.create();
+    platformTransformationMatrix = mat4.multiply(mat4.create(),platformTransformationMatrix,glm.rotateZ(platformRotationAngle));
+    platformTransformationMatrix = mat4.multiply(mat4.create(),platformTransformationMatrix,glm.translate(platformTranslationX,platformTranslationY,platformTranslationZ));
+    platformTransformationMatrix = mat4.multiply(mat4.create(),platformTransformationMatrix,glm.scale(platformScaleX,platformScaleY,platformScaleZ));
+    platformTranformationNode.setMatrix(platformTransformationMatrix);
+}
+
 //load the shader resources using a utility function
 loadResources({
     vs: 'shader/crazy_player.vs.glsl',
     fs: 'shader/crazy_player.fs.glsl',
     windowvs:'shader/window_shadervs.vs.glsl',
-    windowfs: 'shader/window_shaderfs.fs.glsl'
+    windowfs: 'shader/window_shaderfs.fs.glsl',
+    wallBrownvs: 'shader/wall_brown_shadervs.vs.glsl',
+    wallBrownfs: 'shader/wall_brown_shaderfs.fs.glsl',
+    platformvs: 'shader/platform_shadervs.vs.glsl',
+    platformfs: 'shader/platform_shaderfs.fs.glsl'
 }).then(function (resources /*an object containing our keys with the loaded resources*/) {
     init(resources);
 
