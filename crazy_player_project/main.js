@@ -55,7 +55,7 @@ var platformScaleX = 0.4, platformScaleY=0.4, platformScaleZ=0.1;
 //------------------------------------------
 
 //-------- Kamera Variables-----------------
-var cameraFree = true;
+var cameraFree = false;
 var cameraTranslationX = 0,cameraTranslationY = -1.85,cameraTranslationZ = -2.97 ,cameraTranslationSpeed = 1.2;
 var cameraRotationAngle = -90, cameraRotationAngleSpeed = 40;
 //------------------------------------------
@@ -525,18 +525,18 @@ function render(timeInMilliseconds) {
 
     context = createSceneGraphContext(gl,shaderProgram);
 
-    /*if(time<7.2 && !isNaN(time)){
+    if(time<10 && !isNaN(time)){
         updatePlatform();
         updatePlayerOnThePlatform();
         firstScene.render(context);
     }
     else{
-        if(!firstSceneEnd && time>=7.2){ //x = -2.5439868000000083  y  = 0.7419999999999853   z = 2.5740000000000056
-            //camera angle = -34.00000000000061
-            cameraTranslationX = -2.54;
-            cameraTranslationY = 0.74;
-            cameraTranslationZ = 2.57;
-            cameraRotationAngle = -34;
+        if(!firstSceneEnd && time>=10){
+
+            cameraTranslationX = -2.6;
+            cameraTranslationY = -0.24;
+            cameraTranslationZ = 1.18;
+            cameraRotationAngle = -29;
 
             playerTranslationX = 1.75;
             playerTranslationY = 0.125;
@@ -550,35 +550,10 @@ function render(timeInMilliseconds) {
         }
     }
 
-    if(time>=7.2){
+    if(time>=10){
         secondScene.render(context);
+        updatePlayerOnPlayGround();
     }
-    */
-
-
-    if(silincek ==0){
-        //x = 0.34400480000001377  y  = -0.6740000000000101   z = -1.5039844000000087
-        // camera angle = -4.799880000000485
-
-        cameraTranslationX = -0.1;
-        cameraTranslationY = -0.67;
-        cameraTranslationZ = -1.5;
-        cameraRotationAngle = -5;
-
-        playerTranslationX = 1.75;
-        playerTranslationY = 0.125;
-        playerTranslationZ= -2.5;
-
-        var playerTransformationMatrix = mat4.create();
-        playerTransformationMatrix = mat4.multiply(mat4.create(),playerTransformationMatrix,glm.translate(playerTranslationX,playerTranslationY,playerTranslationZ));
-        playerTransformationNode1.setMatrix(playerTransformationMatrix);
-
-        silincek++;
-
-    }
-
-    secondScene.render(context);
-    updatePlayerOnPlayGround();
 
 
     requestAnimationFrame(render);
@@ -594,9 +569,9 @@ function updatePlayerOnPlayGround() {
 
     if(!isNaN(deltaTime) && !isNaN(time)) {
 
-        if(time >0 && time<9.5) {
+        if(time >10 && time<19.5) {
 
-            if (time < 8) {
+            if (time < 18) {
                 if (playerTranslationX >= 0) {
                     playerTranslationX = playerTranslationX - (deltaTime * playerTranslationSpeed * 7 / 8);
                 }
@@ -606,10 +581,9 @@ function updatePlayerOnPlayGround() {
                 updateArmAngle();
                 updateArms();
                 updateLegs();
-                console.log('time : '+time);
             }
 
-            if (time >= 8 && time < 9.5) {
+            if (time >= 18 && time < 19.5) {
                 if (playerRotationAngle > -90)
                     playerRotationAngle = playerRotationAngle - (deltaTime * playerRotationAngleSpeed);
 
@@ -619,13 +593,16 @@ function updatePlayerOnPlayGround() {
             }
         }
 
-        else if(time >9.5 /*&& time<7.5*/ ){ //TODO
+        else if(time >19.5 && time<22 ){ //TODO
 
             //console.log('Arm angle : ' + playerRotationArmAngle);
             restartArmAngle();
             updateArms();
             updateLegs();
 
+        }
+        else{
+            playerGreeting();
         }
 
     }
@@ -676,6 +653,24 @@ function updateArmAngle() {
     }
 }
 
+var playerGreetingHandAngle = 0;
+
+function playerGreeting() {
+
+    if(!isNaN(deltaTime)) {
+        if(playerGreetingHandAngle > -180) {
+            playerGreetingHandAngle = playerGreetingHandAngle - (deltaTime * playerRotationArmAngleSpeed);
+        }
+    }
+
+    var playerTransformationLeftArmMatrix = mat4.multiply(mat4.create(),mat4.create(),glm.translate(0,0.04,0));
+    playerTransformationLeftArmMatrix = mat4.multiply(mat4.create(),playerTransformationLeftArmMatrix,glm.rotateX(playerGreetingHandAngle));
+    playerTransformationLeftArmMatrix = mat4.multiply(mat4.create(),playerTransformationLeftArmMatrix,glm.translate(0,-0.04,0));
+
+    playerTransformationLeftArmMatrix = mat4.multiply(mat4.create(),playerTransformationLeftArmMatrix,glm.translate(playerTranslationLeftArmX,playerTranslationLeftArmY,playerTranslationLeftArmZ));
+    playerTransformationLeftArmMatrix = mat4.multiply(mat4.create(),playerTransformationLeftArmMatrix,glm.scale(playerScaleArmX,playerScaleArmY,playerScaleArmZ));
+    playerTransformationLeftArmNode1.setMatrix(playerTransformationLeftArmMatrix);
+}
 
 function updateArms() {
 
@@ -698,7 +693,6 @@ function updateArms() {
     playerTransformationRightArmMatrix = mat4.multiply(mat4.create(),playerTransformationRightArmMatrix,glm.scale(playerScaleArmX,playerScaleArmY,playerScaleArmZ));
     playerTransformationRightArmNode1.setMatrix(playerTransformationRightArmMatrix);
 
-    console.log('arm angle : ' +playerRotationArmAngle);
 
 }
 
@@ -785,6 +779,15 @@ function createSceneGraphContext(gl, shader) {
     else
         view = calculateViewFreeMatrix();
 
+
+    //silincek
+
+    /*if(cameraFree)
+        view = calculateViewFreeMatrix();
+    else
+        view = calculateViewSecondSceneAnimationMatrix();
+*/
+
     return {
         gl: gl,
         sceneMatrix: mat4.create(),
@@ -858,15 +861,46 @@ function calculateViewSecondSceneAnimationMatrix() {
     var center = [0,0,0];
     var up = [0,1,0];
     viewMatrix = mat4.lookAt(mat4.create(), eye, center, up);
-
     viewMatrix = mat4.multiply(mat4.create() , viewMatrix , glm.translate(cameraTranslationX,cameraTranslationY,cameraTranslationZ));
     viewMatrix = mat4.multiply(mat4.create(),viewMatrix,glm.rotateY(cameraRotationAngle));
+
+    if(!isNaN(time) && !isNaN(deltaTime)){
+        //x = 0.4479843999999902  y  = -0.7439999999999947   z = -1.412000000000001
+        // camera angle = 74.99999999999991
+
+
+        if(time>12 && time<14){
+            if(cameraTranslationX < -0.8){
+                cameraTranslationX = cameraTranslationX +(deltaTime * cameraTranslationSpeed);
+            }
+            if(cameraTranslationY > -0.5){
+                cameraTranslationY = cameraTranslationY - (deltaTime * cameraTranslationSpeed);
+            }
+            if(cameraTranslationZ > -1){
+                cameraTranslationZ = cameraTranslationZ - (deltaTime * cameraTranslationSpeed);
+            }
+        }
+        if(time > 20){
+            if(cameraTranslationX < 0.5){
+                cameraTranslationX = cameraTranslationX +(deltaTime * cameraTranslationSpeed);
+            }
+            if(cameraTranslationY > -0.75){
+                cameraTranslationY = cameraTranslationY - (deltaTime * cameraTranslationSpeed);
+            }
+            if(cameraTranslationZ < -1){
+                cameraTranslationZ = cameraTranslationZ + (deltaTime * cameraTranslationSpeed);
+            }
+            if(cameraRotationAngle < 75){
+                cameraRotationAngle = cameraRotationAngle + (deltaTime * cameraRotationAngleSpeed);
+            }
+        }
+    }
+
     return viewMatrix;
 }
 
 
 function calculateViewFirstSceneAnimationMatrix() {
-    console.log(' firstScene');
     var eye = [0,3,5];
     var center = [0,0,0];
     var up = [0,1,0];
@@ -887,7 +921,7 @@ function calculateViewFirstSceneAnimationMatrix() {
                 cameraRotationAngle = cameraRotationAngle + (deltaTime * cameraRotationAngleSpeed);
             }
         }
-        else if (time < 7.1){
+        else if (time < 10){
             if(cameraTranslationX < 0.32)
                 cameraTranslationX = cameraTranslationX +(deltaTime * cameraTranslationSpeed);
             if(cameraTranslationY < 1.95)
