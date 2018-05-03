@@ -8,7 +8,14 @@ var aspectRatio = canvasWidth / canvasHeight;
 
 var context;
 
-//------------player Variables--------------
+//------------player on Playground Variables------------
+var playerTransformationNode1,playerTransformationRightArmNode1, playerTransformationLeftArmNode1,
+    playerTransformationRightLegNode1, playerTransformationLeftLegNode1,
+    playerTransformationHeadNode1;
+
+
+
+//------------player on Platform Variables--------------
 var playerTransformationNode,playerTransformationRightArmNode, playerTransformationLeftArmNode,
     playerTransformationRightLegNode, playerTransformationLeftLegNode,
     playerTransformationHeadNode;
@@ -21,13 +28,11 @@ var playerTranslationRightArmX = -0.065,playerTranslationRightArmY = 0,playerTra
     playerTranslationLeftArmX = 0.065,playerTranslationLeftArmY = 0,playerTranslationLeftArmZ = 0;
 var playerTranslationRightLegX = -0.03,playerTranslationRightLegY = -0.09,playerTranslationRightLegZ=0,
     playerTranslationLeftLegX = 0.03,playerTranslationLeftLegY = -0.09,playerTranslationLeftLegZ = 0;
-var playerRotationRightArmAngle,playerRotationLefttArmAngle,
-    playerRotationRightLegAngle,playerRotationLeftLegAngle,
-    playerRotationHeadAngle;
-var playerRotationAngleSpeed = 2;
+
 
 var playerScaleHeadX = playerScaleX /3 ,playerScaleHeadY = playerScaleY/3 ,playerScaleHeadZ = playerScaleZ;
-var playerTranslationHeadX,playerTranslationHeadY,playerTranslationHeadZ;
+var playerTranslationHeadX=0,playerTranslationHeadY = 0.0675,playerTranslationHeadZ=0;
+
 
 //------------------------------------------
 
@@ -50,7 +55,7 @@ var platformScaleX = 0.4, platformScaleY=0.4, platformScaleZ=0.1;
 //------------------------------------------
 
 //-------- Kamera Variables-----------------
-var cameraFree = false;
+var cameraFree = true;
 var cameraTranslationX = 0,cameraTranslationY = -1.85,cameraTranslationZ = -2.97 ,cameraTranslationSpeed = 1.2;
 var cameraRotationAngle = -90, cameraRotationAngleSpeed = 40;
 //------------------------------------------
@@ -86,12 +91,16 @@ function init(resources) {
 
     //--------- spiel platz----------
     initPlayGround(secondScene);
+    initDoor(secondScene,resources);
     //---------  player   -----------
-
+    initPlayerOnPlayGround(secondScene);
     //---------- Seats    -------------
     initSeats(secondScene);
     //-------- wall and Glass --------
     initWallAndWindow(secondScene,resources);
+    //----------------------------------
+    //--------Goal----------------------
+    initGoal(secondScene,resources);
     //----------------------------------
 
 
@@ -111,13 +120,144 @@ function handleKeyUp(event) {
 function handleKeyDown(event) {
     isKeyPressing = true;
     key = event.keyCode || event.which || event.charCode;
+    if(key == 70)
+        cameraFree = true;
 }
 
+
+function initGoal(scene,resources) {
+    var goalShader = new ShaderSceneGraphNode(createProgram(gl,resources.goalvs,resources.goalfs));
+
+    var goalTransformationMatrix = mat4.create();
+    goalTransformationMatrix = mat4.multiply(mat4.create(),goalTransformationMatrix,glm.translate(0,0.3,-0.5));
+    var goalTransformationNode = new TransformationSceneGraphNode(goalTransformationMatrix);
+    scene.append(goalTransformationNode);
+
+
+    var goalTransformationRightMatrix = mat4.create();
+    goalTransformationRightMatrix = mat4.multiply(mat4.create(),goalTransformationRightMatrix,glm.rotateY(90));
+    goalTransformationRightMatrix = mat4.multiply(mat4.create(),goalTransformationRightMatrix,glm.translate(-0.4,0,-1.75));
+    goalTransformationRightMatrix = mat4.multiply(mat4.create(),goalTransformationRightMatrix,glm.scale(0.03,0.25,0.03));
+    var goalTransformationRightNode= new TransformationSceneGraphNode(goalTransformationRightMatrix);
+    goalTransformationNode.append(goalTransformationRightNode);
+    goalTransformationRightNode.append(goalShader);
+    goalShader.append(new CubeRenderNode());
+
+    var goalTransformationRightMatrix1 = mat4.create();
+    goalTransformationRightMatrix1 = mat4.multiply(mat4.create(),goalTransformationRightMatrix1,glm.rotateY(-90));
+    goalTransformationRightMatrix1 = mat4.multiply(mat4.create(),goalTransformationRightMatrix1,glm.translate(-0.4,0,-1.75));
+    goalTransformationRightMatrix1 = mat4.multiply(mat4.create(),goalTransformationRightMatrix1,glm.scale(0.03,0.25,0.03));
+    var goalTransformationRightNode1= new TransformationSceneGraphNode(goalTransformationRightMatrix1);
+    goalTransformationNode.append(goalTransformationRightNode1);
+    goalTransformationRightNode1.append(goalShader);
+    goalShader.append(new CubeRenderNode());
+
+    var goalTransformationLeftMatrix = mat4.create();
+    goalTransformationLeftMatrix = mat4.multiply(mat4.create(),goalTransformationLeftMatrix,glm.rotateY(90));
+    goalTransformationLeftMatrix = mat4.multiply(mat4.create(),goalTransformationLeftMatrix,glm.translate(0.4,0,-1.75));
+    goalTransformationLeftMatrix = mat4.multiply(mat4.create(),goalTransformationLeftMatrix,glm.scale(0.03,0.25,0.03));
+    var goalTransformationLeftNode= new TransformationSceneGraphNode(goalTransformationLeftMatrix);
+    goalTransformationNode.append(goalTransformationLeftNode);
+    goalTransformationLeftNode.append(goalShader);
+    goalShader.append(new CubeRenderNode());
+
+    var goalTransformationLeftMatrix1 = mat4.create();
+    goalTransformationLeftMatrix1 = mat4.multiply(mat4.create(),goalTransformationLeftMatrix1,glm.rotateY(-90));
+    goalTransformationLeftMatrix1 = mat4.multiply(mat4.create(),goalTransformationLeftMatrix1,glm.translate(0.4,0,-1.75));
+    goalTransformationLeftMatrix1 = mat4.multiply(mat4.create(),goalTransformationLeftMatrix1,glm.scale(0.03,0.25,0.03));
+    var goalTransformationLeftNode1= new TransformationSceneGraphNode(goalTransformationLeftMatrix1);
+    goalTransformationNode.append(goalTransformationLeftNode1);
+    goalTransformationLeftNode1.append(goalShader);
+    goalShader.append(new CubeRenderNode());
+
+    var goalTransformationTopMatrix = mat4.create();
+    goalTransformationTopMatrix = mat4.multiply(mat4.create(),goalTransformationTopMatrix,glm.rotateY(90));
+    goalTransformationTopMatrix= mat4.multiply(mat4.create(),goalTransformationTopMatrix,glm.translate(0,0.25,-1.75));
+    goalTransformationTopMatrix = mat4.multiply(mat4.create(),goalTransformationTopMatrix,glm.scale(0.43,0.03,0.03));
+    var goalTransformationTopNode= new TransformationSceneGraphNode(goalTransformationTopMatrix);
+    goalTransformationNode.append(goalTransformationTopNode);
+    goalTransformationTopNode.append(goalShader);
+    goalShader.append(new CubeRenderNode());
+
+    var goalTransformationTopMatrix1 = mat4.create();
+    goalTransformationTopMatrix1 = mat4.multiply(mat4.create(),goalTransformationTopMatrix1,glm.rotateY(-90));
+    goalTransformationTopMatrix1= mat4.multiply(mat4.create(),goalTransformationTopMatrix1,glm.translate(0,0.25,-1.75));
+    goalTransformationTopMatrix1 = mat4.multiply(mat4.create(),goalTransformationTopMatrix1,glm.scale(0.43,0.03,0.03));
+    var goalTransformationTopNode1= new TransformationSceneGraphNode(goalTransformationTopMatrix1);
+    goalTransformationNode.append(goalTransformationTopNode1);
+    goalTransformationTopNode1.append(goalShader);
+    goalShader.append(new CubeRenderNode());
+
+}
+
+function initPlayerOnPlayGround(scene) {
+
+    var playerTransformationMatrix = mat4.create();
+    playerTransformationMatrix = mat4.multiply(mat4.create(),playerTransformationMatrix,glm.translate(playerTranslationX,playerTranslationY,playerTranslationZ));
+    //playerTransformationMatrix = mat4.multiply(mat4.create(),playerTransformationMatrix,glm.scale(playerScaleX,playerScaleY,playerScaleZ));
+    playerTransformationNode1 = new TransformationSceneGraphNode(playerTransformationMatrix);
+    scene.append(playerTransformationNode1);
+
+    var playerTransformationBodyMatrix = mat4.create();
+    playerTransformationBodyMatrix = mat4.multiply(mat4.create(),playerTransformationBodyMatrix,glm.scale(playerScaleX,playerScaleY,playerScaleZ));
+    var playerTransformationBodyNode = new TransformationSceneGraphNode(playerTransformationBodyMatrix);
+
+    playerTransformationNode1.append(playerTransformationBodyNode);
+
+    var body = new CubeRenderNode();
+    playerTransformationBodyNode.append(body);
+
+    var playerTransformationLeftArmMatrix = mat4.create();
+    /* !!Arm Bewegung
+    playerTransformationLeftArmMatrix = mat4.multiply(mat4.create(),playerTransformationLeftArmMatrix,glm.translate(0,0.04,0));
+    playerTransformationLeftArmMatrix = mat4.multiply(mat4.create(),playerTransformationLeftArmMatrix,glm.rotateX(-90));
+    playerTransformationLeftArmMatrix = mat4.multiply(mat4.create(),playerTransformationLeftArmMatrix,glm.translate(0,-0.04,0));
+    */
+    playerTransformationLeftArmMatrix = mat4.multiply(mat4.create(),playerTransformationLeftArmMatrix,glm.translate(playerTranslationLeftArmX,playerTranslationLeftArmY,playerTranslationLeftArmZ));
+    playerTransformationLeftArmMatrix = mat4.multiply(mat4.create(),playerTransformationLeftArmMatrix,glm.scale(playerScaleArmX,playerScaleArmY,playerScaleArmZ));
+    playerTransformationLeftArmNode1 = new TransformationSceneGraphNode(playerTransformationLeftArmMatrix);
+    playerTransformationNode1.append(playerTransformationLeftArmNode1);
+    var leftArm = new CubeRenderNode();
+    playerTransformationLeftArmNode1.append(leftArm);
+
+    var playerTransformationRightArmMatrix = mat4.create();
+    playerTransformationRightArmMatrix = mat4.multiply(mat4.create(),playerTransformationRightArmMatrix,glm.translate(playerTranslationRightArmX,playerTranslationRightArmY,playerTranslationRightArmZ));
+    playerTransformationRightArmMatrix = mat4.multiply(mat4.create(),playerTransformationRightArmMatrix,glm.scale(playerScaleArmX,playerScaleArmY,playerScaleArmZ));
+    playerTransformationRightArmNode1 = new TransformationSceneGraphNode(playerTransformationRightArmMatrix);
+    playerTransformationNode1.append(playerTransformationRightArmNode1);
+    var rightArm = new CubeRenderNode();
+    playerTransformationRightArmNode1.append(rightArm);
+
+    var playerTransformationRightLegMatrix = mat4.create();
+    playerTransformationRightLegMatrix = mat4.multiply(mat4.create(),playerTransformationRightLegMatrix,glm.translate(playerTranslationRightLegX,playerTranslationRightLegY,playerTranslationRightLegZ));
+    playerTransformationRightLegMatrix = mat4.multiply(mat4.create(),playerTransformationRightLegMatrix,glm.scale(playerScaleLegX,playerScaleLegY,playerScaleLegZ));
+    playerTransformationRightLegNode1 = new TransformationSceneGraphNode(playerTransformationRightLegMatrix);
+    playerTransformationNode1.append(playerTransformationRightLegNode1);
+    var rightLeg = new CubeRenderNode();
+    playerTransformationRightLegNode1.append(rightLeg);
+
+    var playerTransformationLeftLegMatrix = mat4.create();
+    playerTransformationLeftLegMatrix = mat4.multiply(mat4.create(),playerTransformationLeftLegMatrix,glm.translate(playerTranslationLeftLegX,playerTranslationLeftLegY,playerTranslationLeftLegZ));
+    playerTransformationLeftLegMatrix = mat4.multiply(mat4.create(),playerTransformationLeftLegMatrix,glm.scale(playerScaleLegX,playerScaleLegY,playerScaleLegZ));
+    playerTransformationLeftLegNode1 = new TransformationSceneGraphNode(playerTransformationLeftLegMatrix);
+    playerTransformationNode1.append(playerTransformationLeftLegNode1);
+    var leftLeg = new CubeRenderNode();
+    playerTransformationLeftLegNode1.append(leftLeg);
+
+    var playerTransformationHeadMatrix = mat4.create();
+    playerTransformationHeadMatrix = mat4.multiply(mat4.create(),playerTransformationHeadMatrix,glm.translate(playerTranslationHeadX,playerTranslationHeadY,playerTranslationHeadZ));
+    playerTransformationHeadMatrix = mat4.multiply(mat4.create(),playerTransformationHeadMatrix,glm.scale(playerScaleHeadX,playerScaleHeadY,playerScaleHeadZ));
+    playerTransformationHeadNode1 = new TransformationSceneGraphNode(playerTransformationHeadMatrix);
+    playerTransformationNode1.append(playerTransformationHeadNode1);
+    var head = new CubeRenderNode();
+    playerTransformationHeadNode1.append(head);
+
+}
 
 function initPlayerOnThePlatform(scene) {
 
     var playerTransformationMatrix = mat4.create();
-    playerTransformationMatrix = mat4.multiply(mat4.create(),playerTransformationMatrix,glm.translate(playerTranslationX,playerTranslationY-0.015,playerTranslationZ));
+    playerTransformationMatrix = mat4.multiply(mat4.create(),playerTransformationMatrix,glm.translate(playerTranslationX,playerTranslationY,playerTranslationZ));
     playerTransformationMatrix = mat4.multiply(mat4.create(),playerTransformationMatrix,glm.rotateY(platformRotationAngle));
     //playerTransformationMatrix = mat4.multiply(mat4.create(),playerTransformationMatrix,glm.scale(playerScaleX,playerScaleY,playerScaleZ));
     playerTransformationNode = new TransformationSceneGraphNode(playerTransformationMatrix);
@@ -133,11 +273,13 @@ function initPlayerOnThePlatform(scene) {
     playerTransformationBodyNode.append(body);
 
     var playerTransformationLeftArmMatrix = mat4.create();
+
     /* !!Arm Bewegung
     playerTransformationLeftArmMatrix = mat4.multiply(mat4.create(),playerTransformationLeftArmMatrix,glm.translate(0,0.04,0));
     playerTransformationLeftArmMatrix = mat4.multiply(mat4.create(),playerTransformationLeftArmMatrix,glm.rotateX(-90));
     playerTransformationLeftArmMatrix = mat4.multiply(mat4.create(),playerTransformationLeftArmMatrix,glm.translate(0,-0.04,0));
     */
+
     playerTransformationLeftArmMatrix = mat4.multiply(mat4.create(),playerTransformationLeftArmMatrix,glm.translate(playerTranslationLeftArmX,playerTranslationLeftArmY,playerTranslationLeftArmZ));
     playerTransformationLeftArmMatrix = mat4.multiply(mat4.create(),playerTransformationLeftArmMatrix,glm.scale(playerScaleArmX,playerScaleArmY,playerScaleArmZ));
     playerTransformationLeftArmNode = new TransformationSceneGraphNode(playerTransformationLeftArmMatrix);
@@ -170,7 +312,7 @@ function initPlayerOnThePlatform(scene) {
     playerTransformationLeftLegNode.append(leftLeg);
 
     var playerTransformationHeadMatrix = mat4.create();
-    playerTransformationHeadMatrix = mat4.multiply(mat4.create(),playerTransformationHeadMatrix,glm.translate(0,0.0675,0));
+    playerTransformationHeadMatrix = mat4.multiply(mat4.create(),playerTransformationHeadMatrix,glm.translate(playerTranslationHeadX,playerTranslationHeadY,playerTranslationHeadZ));
     playerTransformationHeadMatrix = mat4.multiply(mat4.create(),playerTransformationHeadMatrix,glm.scale(playerScaleHeadX,playerScaleHeadY,playerScaleHeadZ));
     playerTransformationHeadNode = new TransformationSceneGraphNode(playerTransformationHeadMatrix);
     playerTransformationNode.append(playerTransformationHeadNode);
@@ -278,6 +420,37 @@ function initWallAndWindow(scene,resources) {
     var window = new QuadRenderNode();
     windowTransformationShader.append(window);
 
+}
+
+function initDoor(scene,resources) {
+
+    var shaderBrown = new ShaderSceneGraphNode(createProgram(gl,resources.wallBrownvs,resources.wallBrownfs));
+
+    var doorTransformationRightMatrix = mat4.create();
+    doorTransformationRightMatrix = mat4.multiply(mat4.create(),doorTransformationRightMatrix,glm.translate(1.96,0.3,-2.5));
+    doorTransformationRightMatrix = mat4.multiply(mat4.create(),doorTransformationRightMatrix,glm.scale(0.05,0.3,0.05));
+    var doorTransformationRightNode = new TransformationSceneGraphNode(doorTransformationRightMatrix);
+    scene.append(doorTransformationRightNode);
+    doorTransformationRightNode.append(shaderBrown);
+    shaderBrown.append(new CubeRenderNode());
+
+    var doorTransformationLeftMatrix = mat4.create();
+    doorTransformationLeftMatrix = mat4.multiply(mat4.create(),doorTransformationLeftMatrix,glm.translate(1.5,0.3,-2.5));
+    doorTransformationLeftMatrix = mat4.multiply(mat4.create(),doorTransformationLeftMatrix,glm.scale(0.05,0.3,0.05));
+    var doorTransformationLeftNode = new TransformationSceneGraphNode(doorTransformationLeftMatrix);
+    scene.append(doorTransformationLeftNode);
+    doorTransformationLeftNode.append(shaderBrown);
+    shaderBrown.append(new CubeRenderNode());
+
+    var doorTransformationTopMatrix = mat4.create();
+    doorTransformationTopMatrix = mat4.multiply(mat4.create(),doorTransformationTopMatrix,glm.translate(1.73,0.6,-2.5));
+    doorTransformationTopMatrix = mat4.multiply(mat4.create(),doorTransformationTopMatrix,glm.scale(0.28,0.05,0.05));
+    var doorTransformationTopNode = new TransformationSceneGraphNode(doorTransformationTopMatrix);
+    scene.append(doorTransformationTopNode);
+    doorTransformationTopNode.append(shaderBrown);
+    shaderBrown.append(new CubeRenderNode());
+
+
 
 }
 
@@ -321,6 +494,7 @@ function initPlayGround(scene) {
 
 }
 
+var silincek = 0;
 
 function render(timeInMilliseconds) {
 
@@ -351,7 +525,7 @@ function render(timeInMilliseconds) {
 
     context = createSceneGraphContext(gl,shaderProgram);
 
-    if(time<7.2 && !isNaN(time)){
+    /*if(time<7.2 && !isNaN(time)){
         updatePlatform();
         updatePlayerOnThePlatform();
         firstScene.render(context);
@@ -363,6 +537,15 @@ function render(timeInMilliseconds) {
             cameraTranslationY = 0.74;
             cameraTranslationZ = 2.57;
             cameraRotationAngle = -34;
+
+            playerTranslationX = 1.75;
+            playerTranslationY = 0.125;
+            playerTranslationZ= -2.5;
+
+            var playerTransformationMatrix = mat4.create();
+            playerTransformationMatrix = mat4.multiply(mat4.create(),playerTransformationMatrix,glm.translate(playerTranslationX,playerTranslationY-0.015,playerTranslationZ));
+            playerTransformationNode1.setMatrix(playerTransformationMatrix);
+
             firstSceneEnd = true;
         }
     }
@@ -370,8 +553,32 @@ function render(timeInMilliseconds) {
     if(time>=7.2){
         secondScene.render(context);
     }
+    */
 
 
+    if(silincek ==0){
+        //x = 0.34400480000001377  y  = -0.6740000000000101   z = -1.5039844000000087
+        // camera angle = -4.799880000000485
+
+        cameraTranslationX = -0.1;
+        cameraTranslationY = -0.67;
+        cameraTranslationZ = -1.5;
+        cameraRotationAngle = -5;
+
+        playerTranslationX = 1.75;
+        playerTranslationY = 0.125;
+        playerTranslationZ= -2.5;
+
+        var playerTransformationMatrix = mat4.create();
+        playerTransformationMatrix = mat4.multiply(mat4.create(),playerTransformationMatrix,glm.translate(playerTranslationX,playerTranslationY,playerTranslationZ));
+        playerTransformationNode1.setMatrix(playerTransformationMatrix);
+
+        silincek++;
+
+    }
+
+    secondScene.render(context);
+    updatePlayerOnPlayGround();
 
 
     requestAnimationFrame(render);
@@ -380,6 +587,138 @@ function render(timeInMilliseconds) {
 
 }
 
+var playerRotationArmAngle=0, playerRotationArmAngleSpeed = 25 , leftArmIsBack=true;
+var playerRotationAngle = -30 , playerRotationAngleSpeed= 50,playerTranslationSpeed = 0.25;
+
+function updatePlayerOnPlayGround() {
+
+    if(!isNaN(deltaTime) && !isNaN(time)) {
+
+        if(time >0 && time<9.5) {
+
+            if (time < 8) {
+                if (playerTranslationX >= 0) {
+                    playerTranslationX = playerTranslationX - (deltaTime * playerTranslationSpeed * 7 / 8);
+                }
+                if (playerTranslationZ < -0.5) {
+                    playerTranslationZ = playerTranslationZ + (deltaTime * playerTranslationSpeed);
+                }
+                updateArmAngle();
+                updateArms();
+                updateLegs();
+                console.log('time : '+time);
+            }
+
+            if (time >= 8 && time < 9.5) {
+                if (playerRotationAngle > -90)
+                    playerRotationAngle = playerRotationAngle - (deltaTime * playerRotationAngleSpeed);
+
+                updateArmAngle();
+                updateArms();
+                updateLegs();
+            }
+        }
+
+        else if(time >9.5 /*&& time<7.5*/ ){ //TODO
+
+            //console.log('Arm angle : ' + playerRotationArmAngle);
+            restartArmAngle();
+            updateArms();
+            updateLegs();
+
+        }
+
+    }
+
+    //console.log('player x:'+playerTranslationX + '  player y:'+playerTranslationY + '  player Z:'+playerTranslationZ);
+    //console.log(playerRotationAngle);
+    //console.log(time);
+
+    var playerTransformationMatrix = mat4.create();
+    playerTransformationMatrix = mat4.multiply(mat4.create(),playerTransformationMatrix,glm.translate(playerTranslationX,playerTranslationY,playerTranslationZ));
+    playerTransformationMatrix = mat4.multiply(mat4.create(),playerTransformationMatrix,glm.rotateY(playerRotationAngle));
+    playerTransformationNode1.setMatrix(playerTransformationMatrix);
+
+}
+
+function restartArmAngle() {
+
+    if( !(playerRotationArmAngle > -1 && playerRotationArmAngle<1) ){
+
+        if(playerRotationArmAngle>0){
+            playerRotationArmAngle = playerRotationArmAngle -(deltaTime * playerRotationArmAngleSpeed);
+        }
+        else if(playerRotationArmAngle<0){
+            playerRotationArmAngle = playerRotationArmAngle +(deltaTime * playerRotationArmAngleSpeed);
+        }
+
+    }
+
+}
+
+function updateArmAngle() {
+
+    if(!isNaN(deltaTime)) {
+        if(leftArmIsBack) {
+            playerRotationArmAngle = playerRotationArmAngle + (deltaTime * playerRotationArmAngleSpeed);
+            if(playerRotationArmAngle>=25){
+                leftArmIsBack= false;
+            }
+        }
+        else{
+
+            playerRotationArmAngle = playerRotationArmAngle - (deltaTime * playerRotationArmAngleSpeed);
+            if(playerRotationArmAngle<=-25){
+                leftArmIsBack= true;
+            }
+
+        }
+    }
+}
+
+
+function updateArms() {
+
+    //  !!Arm Bewegung
+    var playerTransformationLeftArmMatrix = mat4.multiply(mat4.create(),mat4.create(),glm.translate(0,0.04,0));
+    playerTransformationLeftArmMatrix = mat4.multiply(mat4.create(),playerTransformationLeftArmMatrix,glm.rotateX(playerRotationArmAngle));
+    playerTransformationLeftArmMatrix = mat4.multiply(mat4.create(),playerTransformationLeftArmMatrix,glm.translate(0,-0.04,0));
+
+    playerTransformationLeftArmMatrix = mat4.multiply(mat4.create(),playerTransformationLeftArmMatrix,glm.translate(playerTranslationLeftArmX,playerTranslationLeftArmY,playerTranslationLeftArmZ));
+    playerTransformationLeftArmMatrix = mat4.multiply(mat4.create(),playerTransformationLeftArmMatrix,glm.scale(playerScaleArmX,playerScaleArmY,playerScaleArmZ));
+    playerTransformationLeftArmNode1.setMatrix(playerTransformationLeftArmMatrix);
+
+
+    var playerTransformationRightArmMatrix = mat4.create();
+    var playerTransformationRightArmMatrix = mat4.multiply(mat4.create(),mat4.create(),glm.translate(0,0.04,0));
+    playerTransformationRightArmMatrix = mat4.multiply(mat4.create(),playerTransformationRightArmMatrix,glm.rotateX(-playerRotationArmAngle));
+    playerTransformationRightArmMatrix = mat4.multiply(mat4.create(),playerTransformationRightArmMatrix,glm.translate(0,-0.04,0));
+
+    playerTransformationRightArmMatrix = mat4.multiply(mat4.create(),playerTransformationRightArmMatrix,glm.translate(playerTranslationRightArmX,playerTranslationRightArmY,playerTranslationRightArmZ));
+    playerTransformationRightArmMatrix = mat4.multiply(mat4.create(),playerTransformationRightArmMatrix,glm.scale(playerScaleArmX,playerScaleArmY,playerScaleArmZ));
+    playerTransformationRightArmNode1.setMatrix(playerTransformationRightArmMatrix);
+
+    console.log('arm angle : ' +playerRotationArmAngle);
+
+}
+
+function updateLegs() {
+
+
+    var playerTransformationLeftLegMatrix = mat4.create();
+    playerTransformationLeftLegMatrix = mat4.multiply(mat4.create(),playerTransformationLeftLegMatrix,glm.rotateX(-playerRotationArmAngle));
+
+    playerTransformationLeftLegMatrix = mat4.multiply(mat4.create(),playerTransformationLeftLegMatrix,glm.translate(playerTranslationLeftLegX,playerTranslationLeftLegY,playerTranslationLeftLegZ));
+    playerTransformationLeftLegMatrix = mat4.multiply(mat4.create(),playerTransformationLeftLegMatrix,glm.scale(playerScaleLegX,playerScaleLegY,playerScaleLegZ));
+    playerTransformationLeftLegNode1.setMatrix(playerTransformationLeftLegMatrix);
+
+    var playerTransformationRightLegMatrix = mat4.create();
+    playerTransformationRightLegMatrix = mat4.multiply(mat4.create(),playerTransformationRightLegMatrix,glm.rotateX(playerRotationArmAngle));
+
+    playerTransformationRightLegMatrix = mat4.multiply(mat4.create(),playerTransformationRightLegMatrix,glm.translate(playerTranslationRightLegX,playerTranslationRightLegY,playerTranslationRightLegZ));
+    playerTransformationRightLegMatrix = mat4.multiply(mat4.create(),playerTransformationRightLegMatrix,glm.scale(playerScaleLegX,playerScaleLegY,playerScaleLegZ));
+    playerTransformationRightLegNode1.setMatrix(playerTransformationRightLegMatrix);
+}
 
 function updatePlayerOnThePlatform() {
 
@@ -407,7 +746,9 @@ loadResources({
     wallBrownvs: 'shader/wall_brown_shadervs.vs.glsl',
     wallBrownfs: 'shader/wall_brown_shaderfs.fs.glsl',
     platformvs: 'shader/platform_shadervs.vs.glsl',
-    platformfs: 'shader/platform_shaderfs.fs.glsl'
+    platformfs: 'shader/platform_shaderfs.fs.glsl',
+    goalvs : 'shader/goal_shadervs.vs.glsl',
+    goalfs: 'shader/goal_shaderfs.fs.glsl'
 }).then(function (resources /*an object containing our keys with the loaded resources*/) {
     init(resources);
 
@@ -455,7 +796,6 @@ function createSceneGraphContext(gl, shader) {
 }
 
 function calculateViewFreeMatrix(){
-    console.log('freeeeee');
 
     //compute the camera's matrix
     var eye = [0,3,5];
@@ -493,8 +833,8 @@ function calculateViewFreeMatrix(){
         }
     }
 
-    console.log('x = ' + cameraTranslationX + '  y  = ' + cameraTranslationY + '   z = ' + cameraTranslationZ );
-    console.log('camera angle = ' + cameraRotationAngle);
+    //console.log('x = ' + cameraTranslationX + '  y  = ' + cameraTranslationY + '   z = ' + cameraTranslationZ );
+    //console.log('camera angle = ' + cameraRotationAngle);
 
     viewMatrix = mat4.multiply(mat4.create() , viewMatrix , glm.translate(cameraTranslationX,cameraTranslationY,cameraTranslationZ));
     viewMatrix = mat4.multiply(mat4.create(),viewMatrix,glm.rotateY(cameraRotationAngle));
@@ -513,7 +853,6 @@ function calculateViewMatrix() {
 }
 
 function calculateViewSecondSceneAnimationMatrix() {
-    console.log('we are second sceneeee .......');
     //compute the camera's matrix
     var eye = [0,3,5];
     var center = [0,0,0];
