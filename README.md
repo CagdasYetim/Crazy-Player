@@ -3,15 +3,6 @@
 This repository contains the labs for the course Computer Graphics at the Johannes Kepler University Linz, Austria.
 
 
-# Staff
- * David Schedl (@schedldave)
- * Marc Streit (@mstreit)
- * Teaching Assistants: Vaishali Dhanoa
-
-# Launch
-
-1. clone the repository: `git clone https://github.com/JKU-ICG/cg_lab_2018.git`
-
 # Structure
 
  * libs
